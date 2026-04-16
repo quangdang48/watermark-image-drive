@@ -56,24 +56,31 @@ async function listGeneratedLevels(imageId) {
     .sort((left, right) => left - right);
 }
 
-export async function processImageUpload({ buffer }) {
+export async function processImageUpload({ buffer, filePath }) {
   await ensureStorageReady();
+
+  const sourceInput = filePath || buffer;
+
+  if (!sourceInput) {
+    throw new Error('An image buffer or file path is required');
+  }
 
   const imageId = crypto.randomUUID();
   const imageRoot = resolveImageRoot(imageId);
   await fs.mkdir(imageRoot, { recursive: true });
 
-  const metadata = await sharp(buffer).rotate().metadata();
+  const sourceImage = sharp(sourceInput, { sequentialRead: true });
+  const metadata = await sourceImage.clone().rotate().metadata();
   const manifestBasePath = resolveImagePath(imageId, 'image');
   const manifestPath = resolveImagePath(imageId, 'image.dzi');
   const downloadPath = resolveImagePath(imageId, 'download.jpg');
 
-  await sharp(buffer)
+  await sourceImage.clone()
     .rotate()
     .jpeg({ quality: 92 })
     .toFile(downloadPath);
 
-  await sharp(buffer)
+  await sourceImage.clone()
     .rotate()
     .jpeg({ quality: 90 })
     .tile({

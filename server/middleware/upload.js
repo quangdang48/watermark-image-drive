@@ -1,11 +1,34 @@
+import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import multer from 'multer';
 
 const maxFileSizeMb = Number(process.env.MAX_UPLOAD_SIZE_MB || 15);
 const maxFileSizeBytes = maxFileSizeMb * 1024 * 1024;
 const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const currentFilePath = fileURLToPath(import.meta.url);
+const currentDir = path.dirname(currentFilePath);
+const rootDir = path.resolve(currentDir, '../..');
+const tempUploadDir = path.join(rootDir, 'data', 'tmp');
+
+const storage = multer.diskStorage({
+  destination: async (_req, _file, callback) => {
+    try {
+      await fs.mkdir(tempUploadDir, { recursive: true });
+      callback(null, tempUploadDir);
+    } catch (error) {
+      callback(error, tempUploadDir);
+    }
+  },
+  filename: (_req, file, callback) => {
+    const extension = path.extname(file.originalname || '').toLowerCase() || '.bin';
+    callback(null, `${Date.now()}-${crypto.randomUUID()}${extension}`);
+  },
+});
 
 const upload = multer({
-  storage: multer.memoryStorage(),
+  storage,
   limits: {
     fileSize: maxFileSizeBytes,
   },

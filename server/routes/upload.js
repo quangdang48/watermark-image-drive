@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Router } from 'express';
 import { uploadSingleImage } from '../middleware/upload.js';
-import { processImageUpload } from '../services/imagePipeline.js';
+import { getUploadJobStatus, runUploadViaQueue } from '../services/uploadQueue.js';
 import {
   createFolderRecord,
   deleteFolderRecords,
@@ -12,7 +12,6 @@ import {
   listImageRecords,
   renameFolderRecords,
   resolveImageRoot,
-  saveImageRecord,
   updateImageRecord,
 } from '../services/storage.js';
 
@@ -195,6 +194,43 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
+router.get('/jobs/:jobId', async (req, res, next) => {
+  try {
+    const jobStatus = await getUploadJobStatus(req.params.jobId);
+
+    if (!jobStatus) {
+      return res.status(404).json({ error: 'Upload job not found' });
+    }
+
+    if (jobStatus.state === 'completed' && jobStatus.result) {
+      return res.status(200).json({
+        status: 'ok',
+        jobId: jobStatus.jobId,
+        state: jobStatus.state,
+        image: toImagePayload(jobStatus.result),
+        processingMode: 'redis-worker',
+      });
+    }
+
+    if (jobStatus.state === 'failed') {
+      return res.status(200).json({
+        status: 'failed',
+        jobId: jobStatus.jobId,
+        state: jobStatus.state,
+        failureReason: jobStatus.failureReason,
+      });
+    }
+
+    return res.status(200).json({
+      status: 'queued',
+      jobId: jobStatus.jobId,
+      state: jobStatus.state,
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.get('/:id/download', async (req, res, next) => {
   try {
     const imageRecord = await getImageRecord(req.params.id);
@@ -250,26 +286,30 @@ router.post(
         return res.status(400).json({ error: 'An image file is required' });
       }
 
-      const processedImage = await processImageUpload({
-        buffer: req.file.buffer,
-      });
-
-      const savedImage = await saveImageRecord({
-        imageId: processedImage.imageId,
+      const uploadResult = await runUploadViaQueue({
+        tempFilePath: req.file.path,
         owner: {
           sub: 'anonymous',
           role: 'viewer',
         },
         originalFileName: req.file.originalname,
         mimeType: req.file.mimetype,
-        metadata: processedImage.metadata,
-        levels: processedImage.levels,
         folder: normalizeFolderName(req.body.folder),
         imageName: normalizeImageName(req.body.imageName, req.file.originalname),
-        createdAt: new Date().toISOString(),
       });
 
-      return res.status(200).json(toImagePayload(savedImage));
+      if (uploadResult.status === 'queued') {
+        return res.status(202).json({
+          status: 'queued',
+          jobId: uploadResult.jobId,
+          message: 'Upload accepted and is being processed by the Redis worker.',
+        });
+      }
+
+      return res.status(200).json({
+        ...toImagePayload(uploadResult.imageRecord),
+        processingMode: uploadResult.mode,
+      });
     } catch (error) {
       return next(error);
     }

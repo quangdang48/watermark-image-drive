@@ -7,11 +7,13 @@
     "reset": "node scripts/resetData.js",
     "start": "node server/index.js",
     "start:keep": "node server/index.js",
+    "worker": "node server/worker.js",
     "dev": "node scripts/resetData.js && node --watch server/index.js",
     "dev:keep": "node --watch server/index.js",
     "test": "node --test && node scripts/resetData.js"
   },
   "dependencies": {
+    "bullmq": "^5.74.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.0",

@@ -723,6 +723,39 @@ function downloadSelectedImage(imageIdOverride) {
   window.location.href = `/upload/${encodeURIComponent(imageId)}/download`;
 }
 
+function waitForDelay(durationMs) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, durationMs);
+  });
+}
+
+async function waitForUploadJob(jobId, preferredFolder) {
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const response = await fetch(`/upload/jobs/${encodeURIComponent(jobId)}`);
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload.error || 'Unable to read upload job status');
+    }
+
+    if (payload.status === 'ok' && payload.image) {
+      return payload.image;
+    }
+
+    if (payload.status === 'failed') {
+      throw new Error(payload.failureReason || 'Upload job failed');
+    }
+
+    setStatus(
+      'Upload is being processed by the Redis worker...',
+      `Job ${jobId} • state: ${payload.state || 'queued'} • folder: ${preferredFolder}`,
+    );
+    await waitForDelay(1000);
+  }
+
+  return null;
+}
+
 async function uploadImage() {
   const imageFile = imageInput.files[0];
   const targetFolder = folderInput.value.trim();
@@ -750,7 +783,7 @@ async function uploadImage() {
       body: formData,
     });
 
-    const payload = await response.json();
+    let payload = await response.json();
 
     if (!response.ok) {
       showToast('Error', 'Upload failed', 'error');
@@ -758,13 +791,28 @@ async function uploadImage() {
       return;
     }
 
+    imageInput.value = '';
+    closeModal(uploadModal);
+
+    if (response.status === 202 || payload.status === 'queued') {
+      showToast('Queued', 'Upload accepted. The Redis worker is processing it now.', 'info');
+      setStatus('Upload queued successfully.', payload);
+      const completedPayload = await waitForUploadJob(payload.jobId, targetFolder);
+
+      if (!completedPayload) {
+        await refreshLibrary(targetFolder, currentImageId);
+        showToast('Still processing', 'The image is still being processed. Refresh the library in a moment.', 'info');
+        return;
+      }
+
+      payload = completedPayload;
+    }
+
     folderInput.value = payload.folder || '';
     imageNameInput.value = payload.imageName || '';
     if (imageIdInput) {
       imageIdInput.value = payload.imageId;
     }
-    imageInput.value = '';
-    closeModal(uploadModal);
     await refreshLibrary(payload.folder, payload.imageId);
     showToast('Success', `Uploaded: ${payload.imageName || payload.imageId}`, 'success');
     setStatus('Upload completed successfully.', payload);
