@@ -32,8 +32,11 @@ test('serves teacher and student views from simple paths', async () => {
 
   assert.equal(teacherResponse.status, 200);
   assert.match(teacherResponse.text, /Photo Gallery/);
+  assert.match(teacherResponse.text, /Upload Image/);
+  assert.doesNotMatch(teacherResponse.text, /Rename selected image|Rename selected folder|Save Changes/);
   assert.equal(studentResponse.status, 200);
   assert.match(studentResponse.text, /Photo Gallery/);
+  assert.match(studentResponse.text, /Student/);
 });
 
 test('uploads an image without JWT configuration', async () => {
@@ -109,6 +112,29 @@ test('updates image name and folder for library management', async () => {
   )));
 });
 
+test('creates empty folders and lists them in the library', async () => {
+  const app = createApp();
+  const folderId = `new-folder-${Date.now()}`;
+
+  const createResponse = await request(app)
+    .post('/upload/folders')
+    .send({ folderName: folderId });
+
+  assert.equal(createResponse.status, 201);
+  assert.equal(createResponse.body.folderId, folderId);
+  assert.equal(createResponse.body.imageCount, 0);
+
+  const libraryResponse = await request(app)
+    .get('/upload/library');
+
+  assert.equal(libraryResponse.status, 200);
+  assert.ok(libraryResponse.body.folders.some((folder) => (
+    folder.folderId === folderId
+      && Array.isArray(folder.images)
+      && folder.images.length === 0
+  )));
+});
+
 test('renames and deletes folders through the management API', async () => {
   const app = createApp();
   const image = await createImageBuffer();
@@ -173,6 +199,26 @@ test('returns uploaded image metadata by id', async () => {
   assert.ok(imageResponse.body.metadata);
 });
 
+test('allows teachers to download an uploaded image', async () => {
+  const app = createApp();
+  const image = await createImageBuffer();
+
+  const uploadResponse = await request(app)
+    .post('/upload')
+    .field('folder', 'downloads')
+    .field('imageName', 'class-photo')
+    .attach('image', image, 'sample.jpg');
+
+  assert.equal(uploadResponse.status, 200);
+
+  const downloadResponse = await request(app)
+    .get(`/upload/${uploadResponse.body.imageId}/download`);
+
+  assert.equal(downloadResponse.status, 200);
+  assert.match(downloadResponse.headers['content-type'], /image\//);
+  assert.match(downloadResponse.headers['content-disposition'], /attachment/);
+});
+
 test('serves manifest and tiles without security tokens', async () => {
   const app = createApp();
   const image = await createImageBuffer();
@@ -202,4 +248,29 @@ test('serves manifest and tiles without security tokens', async () => {
 
   assert.equal(legacyTileResponse.status, 200);
   assert.match(legacyTileResponse.headers['content-type'], /image\/jpeg/);
+});
+
+test('renders a personalized watermark when a viewer name is supplied for a tile', async () => {
+  const app = createApp();
+  const image = await createImageBuffer();
+
+  const uploadResponse = await request(app)
+    .post('/upload')
+    .attach('image', image, 'sample.jpg');
+
+  assert.equal(uploadResponse.status, 200);
+
+  const { imageId } = uploadResponse.body;
+
+  const baseTileResponse = await request(app)
+    .get(`/tiles/${imageId}/0/0_0.jpg`);
+
+  const watermarkedTileResponse = await request(app)
+    .get(`/tiles/${imageId}/0/0_0.jpg`)
+    .query({ viewerName: 'Parent Demo' });
+
+  assert.equal(baseTileResponse.status, 200);
+  assert.equal(watermarkedTileResponse.status, 200);
+  assert.match(watermarkedTileResponse.headers['content-type'], /image\/jpeg/);
+  assert.notDeepEqual(watermarkedTileResponse.body, baseTileResponse.body);
 });

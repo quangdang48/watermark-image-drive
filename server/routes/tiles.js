@@ -1,9 +1,87 @@
 import fs from 'node:fs';
 import { access, readFile } from 'node:fs/promises';
 import { Router } from 'express';
+import sharp from 'sharp';
 import { getImageRecord, resolveImagePath } from '../services/storage.js';
 
 const router = Router();
+
+function readCookieValue(cookieHeader, name) {
+  const cookie = String(cookieHeader || '')
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${name}=`));
+
+  if (!cookie) {
+    return '';
+  }
+
+  return decodeURIComponent(cookie.slice(name.length + 1));
+}
+
+function sanitizeViewerName(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .slice(0, 48);
+}
+
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getViewerNameFromRequest(req) {
+  return sanitizeViewerName(
+    req.query?.viewerName || req.get('x-viewer-name') || readCookieValue(req.headers.cookie, 'viewerName'),
+  );
+}
+
+function createWatermarkSvg(viewerName, width = 256, height = 256) {
+  const safeName = escapeXml(viewerName);
+  const fontSize = Math.max(12, Math.round(Math.min(width, height) * 0.12));
+  const padding = Math.max(2, Math.round(Math.min(width, height) * 0.05));
+  const boxWidth = Math.max(1, Math.min(width - padding, Math.max(18, Math.round(width * 0.5))));
+  const boxHeight = Math.max(1, Math.min(height - padding, Math.max(18, Math.round(height * 0.22))));
+  const x = Math.max(0, width - boxWidth - padding);
+  const y = Math.max(0, height - boxHeight - padding);
+
+  return Buffer.from(`
+    <svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        <rect
+          x="${x}"
+          y="${y}"
+          width="${boxWidth}"
+          height="${boxHeight}"
+          rx="6"
+          fill="rgba(0,0,0,0.50)"
+        />
+        <rect
+          x="${Math.max(0, width - Math.max(2, Math.ceil(width * 0.08)))}"
+          y="0"
+          width="${Math.max(2, Math.ceil(width * 0.08))}"
+          height="${Math.max(2, Math.ceil(height * 0.08))}"
+          fill="rgba(255,255,255,0.85)"
+        />
+        <text
+          x="${x + Math.max(4, Math.round(boxWidth * 0.08))}"
+          y="${Math.min(height - 4, y + Math.max(12, Math.round(boxHeight * 0.72)))}"
+          fill="#ffffff"
+          font-size="${fontSize}"
+          font-family="Arial, sans-serif"
+          font-weight="700"
+        >
+          ${safeName}
+        </text>
+      </g>
+    </svg>
+  `);
+}
 
 router.get('/:id/image.dzi', async (req, res, next) => {
   try {
@@ -72,7 +150,23 @@ async function serveTile(req, res, next) {
       return res.status(404).json({ error: 'Tile not found' });
     }
 
-    res.set('Cache-Control', 'private, max-age=60');
+    const viewerName = getViewerNameFromRequest(req);
+
+    res.set('Cache-Control', viewerName ? 'private, no-store' : 'private, max-age=60');
+    res.set('Vary', 'Cookie');
+
+    if (viewerName) {
+      const tileImage = sharp(tilePath);
+      const metadata = await tileImage.metadata();
+      const renderedTile = await tileImage
+        .composite([{ input: createWatermarkSvg(viewerName, metadata.width || 256, metadata.height || 256) }])
+        .jpeg({ quality: 90 })
+        .toBuffer();
+
+      res.type('image/jpeg');
+      return res.send(renderedTile);
+    }
+
     res.type(tilePath.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg');
     fs.createReadStream(tilePath).on('error', next).pipe(res);
     return undefined;

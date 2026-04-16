@@ -4,9 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "reset": "node scripts/resetData.js",
     "start": "node server/index.js",
-    "dev": "node --watch server/index.js",
-    "test": "node --test"
+    "start:keep": "node server/index.js",
+    "dev": "node scripts/resetData.js && node --watch server/index.js",
+    "dev:keep": "node --watch server/index.js",
+    "test": "node --test && node scripts/resetData.js"
   },
   "dependencies": {
     "express": "^4.21.2",

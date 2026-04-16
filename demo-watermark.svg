@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <rect width="1400" height="900" fill="#dfe8ff" />
+  <rect x="60" y="60" width="1280" height="780" rx="32" fill="#ffffff" stroke="#bdd1ff" stroke-width="8" />
+  <text x="100" y="220" font-family="Arial, sans-serif" font-size="72" font-weight="700" fill="#1f4aa8">Student Watermark Demo</text>
+  <text x="100" y="310" font-family="Arial, sans-serif" font-size="36" fill="#4a628f">Open the Student tab, enter a name, then preview the image.</text>
+  <text x="100" y="380" font-family="Arial, sans-serif" font-size="30" fill="#6a7da3">The tile response will render a personalized watermark for that name.</text>
+</svg>

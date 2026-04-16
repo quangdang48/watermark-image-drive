@@ -4,9 +4,11 @@ import { Router } from 'express';
 import { uploadSingleImage } from '../middleware/upload.js';
 import { processImageUpload } from '../services/imagePipeline.js';
 import {
+  createFolderRecord,
   deleteFolderRecords,
   deleteImageRecord,
   getImageRecord,
+  listFolderRecords,
   listImageRecords,
   renameFolderRecords,
   resolveImageRoot,
@@ -31,6 +33,7 @@ function toImagePayload(imageRecord) {
     status: 'ok',
     imageId: imageRecord.imageId,
     dziUrl: `/tiles/${imageRecord.imageId}/image.dzi`,
+    downloadUrl: `/upload/${imageRecord.imageId}/download`,
     metadata: imageRecord.metadata,
     levels: imageRecord.levels,
     originalFileName: imageRecord.originalFileName,
@@ -40,14 +43,33 @@ function toImagePayload(imageRecord) {
   };
 }
 
+function createDownloadName(imageRecord) {
+  const baseName = String(imageRecord.imageName || imageRecord.originalFileName || imageRecord.imageId)
+    .trim()
+    .replace(/[<>:"/\\|?*\u0000-\u001F]+/g, '-')
+    .replace(/\s+/g, '-');
+
+  return (baseName || imageRecord.imageId).replace(/\.(jpg|jpeg|png|webp)$/i, '') + '.jpg';
+}
+
 async function removeImageAssets(imageId) {
   await fs.rm(resolveImageRoot(imageId), { recursive: true, force: true });
 }
 
 router.get('/library', async (_req, res, next) => {
   try {
-    const imageRecords = await listImageRecords();
+    const [imageRecords, folderRecords] = await Promise.all([
+      listImageRecords(),
+      listFolderRecords(),
+    ]);
     const groupedFolders = new Map();
+
+    for (const folderRecord of folderRecords) {
+      groupedFolders.set(folderRecord.folderId, {
+        folderId: folderRecord.folderId,
+        images: [],
+      });
+    }
 
     for (const imageRecord of imageRecords) {
       const folderId = imageRecord.folder || 'General';
@@ -76,12 +98,31 @@ router.get('/library', async (_req, res, next) => {
   }
 });
 
+router.post('/folders', async (req, res, next) => {
+  try {
+    const folderName = normalizeFolderName(req.body.folderName);
+    const createdFolder = await createFolderRecord(folderName);
+
+    if (!createdFolder) {
+      return res.status(409).json({ error: 'Folder already exists' });
+    }
+
+    return res.status(201).json({
+      status: 'ok',
+      folderId: createdFolder.folderId,
+      imageCount: 0,
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.patch('/folders/:folderId', async (req, res, next) => {
   try {
     const nextFolderName = normalizeFolderName(req.body.nextFolderName);
     const updatedRecords = await renameFolderRecords(req.params.folderId, nextFolderName);
 
-    if (!updatedRecords.length) {
+    if (updatedRecords === null) {
       return res.status(404).json({ error: 'Folder not found' });
     }
 
@@ -99,7 +140,7 @@ router.delete('/folders/:folderId', async (req, res, next) => {
   try {
     const deletedRecords = await deleteFolderRecords(req.params.folderId);
 
-    if (!deletedRecords.length) {
+    if (deletedRecords === null) {
       return res.status(404).json({ error: 'Folder not found' });
     }
 
@@ -150,6 +191,29 @@ router.delete('/:id', async (req, res, next) => {
       deleted: true,
     });
   } catch (error) {
+    return next(error);
+  }
+});
+
+router.get('/:id/download', async (req, res, next) => {
+  try {
+    const imageRecord = await getImageRecord(req.params.id);
+
+    if (!imageRecord) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
+
+    const downloadPath = resolveImageRoot(req.params.id);
+    const filePath = path.join(downloadPath, 'download.jpg');
+    await fs.access(filePath);
+
+    res.set('Cache-Control', 'private, max-age=60');
+    return res.download(filePath, createDownloadName(imageRecord));
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return res.status(404).json({ error: 'Download not available for this image' });
+    }
+
     return next(error);
   }
 });

@@ -8,139 +8,297 @@
   </head>
   <body>
     <main class="page-shell">
-      <section class="panel">
-        <div class="view-switcher">
-          <button id="teacherViewBtn" type="button" class="view-toggle-btn">Teacher</button>
-          <button id="studentViewBtn" type="button" class="view-toggle-btn">Student</button>
-        </div>
-
-        <h1 id="pageTitle">Photo Gallery</h1>
-        <p id="pageIntro" class="muted">
-          Upload an image, generate Deep Zoom tiles, and view the result
-          instantly.
-        </p>
-
-        <div class="teacher-only">
-          <div class="section-card upload-section">
-            <h3>Upload Image</h3>
-            <label for="folderInput">Folder name</label>
-            <input id="folderInput" type="text" placeholder="Example: Class A" />
-
-            <label for="imageNameInput">Image name</label>
-            <input
-              id="imageNameInput"
-              type="text"
-              placeholder="Example: Portrait 1"
-            />
-
-            <label for="imageInput">Image file</label>
-            <input
-              id="imageInput"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-            />
-
-            <button id="uploadButton" type="button" class="primary-button">
-              Upload & Process
+      <section class="panel sidebar-panel">
+        <div class="drive-badge-row">
+          <span class="drive-badge">My Drive Workspace</span>
+          <div class="view-switcher">
+            <button id="teacherViewBtn" type="button" class="view-toggle-btn">
+              Teacher
             </button>
-          </div>
-
-          <div class="section-card image-management-section">
-            <div class="library-header-row">
-              <h3>Image Management</h3>
-              <span id="selectedCount" class="selection-count">0 selected</span>
-            </div>
-
-            <div class="management-inputs">
-              <label for="manageFolderInput">Folder name</label>
-              <input
-                id="manageFolderInput"
-                type="text"
-                placeholder="Rename or move folder"
-              />
-
-              <label for="manageImageNameInput">Image name</label>
-              <input
-                id="manageImageNameInput"
-                type="text"
-                placeholder="Rename selected image"
-              />
-
-              <label for="imageIdInput">Image ID (optional)</label>
-              <input
-                id="imageIdInput"
-                type="text"
-                placeholder="Load by ID or click tree"
-              />
-            </div>
-
-            <div class="actions compact-actions">
-              <button id="saveImageButton" type="button">
-                Save Changes
-              </button>
-              <button id="renameFolderButton" type="button" class="secondary-button">
-                Rename Folder
-              </button>
-              <button id="loadImageButton" type="button" class="secondary-button">
-                Load Image
-              </button>
-              <button
-                id="deleteImageButton"
-                type="button"
-                class="danger-button"
-              >
-                Delete Image
-              </button>
-              <button
-                id="deleteFolderButton"
-                type="button"
-                class="danger-button"
-              >
-                Delete Folder
-              </button>
-            </div>
+            <button id="studentViewBtn" type="button" class="view-toggle-btn">
+              Student
+            </button>
           </div>
         </div>
 
-        <div class="library-panel">
-          <div class="library-header-row">
-            <h3>Library</h3>
-            <button
-              id="refreshLibraryButton"
-              type="button"
-              class="secondary-button"
-            >
-              Refresh
-            </button>
-          </div>
-
-          <p id="librarySummary" class="muted small-text">
-            No folders loaded yet.
+        <div class="page-hero">
+          <p class="eyebrow">Folders • Images • Preview</p>
+          <h1 id="pageTitle">Photo Gallery</h1>
+          <p id="pageIntro" class="muted">
+            Upload, download, remove, and view gallery images instantly.
           </p>
 
-          <div class="tree-panel">
-            <div class="tree-header-row">
-              <p class="tree-title">Browse Images</p>
-              <div class="tree-actions teacher-only">
-                <button id="selectAllButton" type="button" class="icon-button" title="Select all">☑</button>
-                <button id="clearSelectionButton" type="button" class="icon-button" title="Clear selection">☐</button>
-              </div>
+          <div class="hero-actions teacher-only">
+            <button
+              id="createFolderButton"
+              type="button"
+              class="primary-button action-button"
+            >
+              <span class="button-icon" aria-hidden="true">📁</span>
+              <span>New Folder</span>
+            </button>
+          </div>
+
+          <div class="student-watermark-panel student-only">
+            <label for="viewerNameInput">Your name watermark</label>
+            <div class="student-watermark-row">
+              <input
+                id="viewerNameInput"
+                type="text"
+                maxlength="48"
+                placeholder="Enter your name"
+              />
+              <button
+                id="applyViewerNameButton"
+                type="button"
+                class="secondary-button action-button"
+              >
+                Apply Name
+              </button>
             </div>
-            <div id="libraryTree" class="library-tree"></div>
+            <p class="muted small-text">
+              Demo mode: preview tiles will show this name as a watermark.
+            </p>
           </div>
         </div>
 
-        <pre id="statusBox" class="status-box">Ready.</pre>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <span class="metric-label">Folders</span>
+            <strong id="totalFoldersMetric">0</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Images</span>
+            <strong id="totalImagesMetric">0</strong>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Current</span>
+            <strong id="currentFolderMetric">—</strong>
+          </div>
+        </div>
+
+        <details class="sidebar-group library-group" open>
+          <summary class="sidebar-summary">
+            <span>Library & Management</span>
+            <span class="sidebar-summary-hint">drive view</span>
+          </summary>
+          <div class="sidebar-group-content">
+            <div class="library-panel combined-library-panel">
+              <div class="library-header-row">
+                <div>
+                  <h3>My Drive</h3>
+                </div>
+                <button
+                  id="refreshLibraryButton"
+                  type="button"
+                  class="secondary-button action-button"
+                >
+                  <span class="button-icon" aria-hidden="true">🔄</span>
+                  <span>Refresh</span>
+                </button>
+              </div>
+
+              <p id="librarySummary" class="muted small-text">
+                No folders loaded yet.
+              </p>
+
+              <div class="tree-panel">
+                <div class="tree-header-row">
+                  <p class="tree-title">Folders and images</p>
+                  <div class="tree-tools">
+                    <button
+                      id="expandAllFoldersButton"
+                      type="button"
+                      class="secondary-button action-button compact-button"
+                    >
+                      <span class="button-icon" aria-hidden="true">📂</span>
+                      <span>Expand</span>
+                    </button>
+                    <button
+                      id="collapseAllFoldersButton"
+                      type="button"
+                      class="secondary-button action-button compact-button"
+                    >
+                      <span class="button-icon" aria-hidden="true">📁</span>
+                      <span>Close</span>
+                    </button>
+                    <span id="selectedCount" class="selection-count"
+                      >0 selected</span
+                    >
+                  </div>
+                </div>
+                <div id="libraryTree" class="library-tree"></div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="sidebar-group">
+          <summary class="sidebar-summary">
+            <span>Activity</span>
+            <span class="sidebar-summary-hint">status</span>
+          </summary>
+          <div class="sidebar-group-content">
+            <pre id="statusBox" class="status-box">Ready.</pre>
+          </div>
+        </details>
       </section>
 
       <section class="panel viewer-panel">
         <div class="viewer-header">
-          <h2>Viewer</h2>
-          <p id="viewerMeta" class="muted">No image loaded yet.</p>
+          <div>
+            <p class="eyebrow">Preview</p>
+            <h2>Viewer</h2>
+          </div>
+          <div class="viewer-toolbar">
+            <p id="viewerMeta" class="muted">No image loaded yet.</p>
+            <button
+              id="downloadCurrentImageButton"
+              type="button"
+              class="secondary-button teacher-only action-button"
+            >
+              <span class="button-icon" aria-hidden="true">⬇️</span>
+              <span>Download Image</span>
+            </button>
+          </div>
         </div>
         <div id="viewer" class="viewer"></div>
       </section>
     </main>
+
+    <div id="folderModal" class="modal-overlay" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <h3 class="modal-title">Create Folder</h3>
+          <button
+            type="button"
+            class="icon-button"
+            data-close-modal="folderModal"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        <label for="createFolderInput">Folder name</label>
+        <input
+          id="createFolderInput"
+          type="text"
+          placeholder="Example: Class A"
+        />
+
+        <div class="modal-actions">
+          <button
+            id="createFolderConfirmButton"
+            type="button"
+            class="primary-button action-button"
+          >
+            <span class="button-icon" aria-hidden="true">✅</span>
+            <span>Create Folder</span>
+          </button>
+          <button
+            type="button"
+            class="secondary-button"
+            data-close-modal="folderModal"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="uploadModal" class="modal-overlay" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <h3 class="modal-title">Upload Image</h3>
+          <button
+            type="button"
+            class="icon-button"
+            data-close-modal="uploadModal"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        <label for="folderInput">Folder name</label>
+        <input
+          id="folderInput"
+          type="text"
+          placeholder="Select or type a folder name"
+        />
+
+        <label for="imageNameInput">Image name</label>
+        <input
+          id="imageNameInput"
+          type="text"
+          placeholder="Example: Portrait 1"
+        />
+
+        <label for="imageInput">Image file</label>
+        <input
+          id="imageInput"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+        />
+
+        <div class="modal-actions">
+          <button
+            id="uploadButton"
+            type="button"
+            class="primary-button action-button"
+          >
+            <span class="button-icon" aria-hidden="true">🖼️</span>
+            <span>Upload Image</span>
+          </button>
+          <button
+            type="button"
+            class="secondary-button"
+            data-close-modal="uploadModal"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="confirmModal" class="modal-overlay" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true">
+        <div class="modal-header">
+          <h3 id="confirmModalTitle" class="modal-title">Please confirm</h3>
+          <button
+            type="button"
+            class="icon-button"
+            data-close-modal="confirmModal"
+            aria-label="Close"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p id="confirmModalMessage" class="muted">
+          Are you sure you want to continue?
+        </p>
+
+        <div class="modal-actions">
+          <button
+            id="confirmModalAcceptButton"
+            type="button"
+            class="danger-button action-button"
+          >
+            <span class="button-icon" aria-hidden="true">⚠️</span>
+            <span>Confirm</span>
+          </button>
+          <button
+            id="confirmModalCancelButton"
+            type="button"
+            class="secondary-button"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div id="toastContainer" class="toast-container"></div>
 

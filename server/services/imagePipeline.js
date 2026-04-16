@@ -66,6 +66,12 @@ export async function processImageUpload({ buffer }) {
   const metadata = await sharp(buffer).rotate().metadata();
   const manifestBasePath = resolveImagePath(imageId, 'image');
   const manifestPath = resolveImagePath(imageId, 'image.dzi');
+  const downloadPath = resolveImagePath(imageId, 'download.jpg');
+
+  await sharp(buffer)
+    .rotate()
+    .jpeg({ quality: 92 })
+    .toFile(downloadPath);
 
   await sharp(buffer)
     .rotate()
