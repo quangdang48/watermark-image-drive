@@ -1,0 +1,100 @@
+{
+  "images": {
+    "2c7b67ed-a158-47bb-8622-b6db20282733": {
+      "imageId": "2c7b67ed-a158-47bb-8622-b6db20282733",
+      "owner": {
+        "sub": "anonymous",
+        "role": "viewer"
+      },
+      "originalFileName": "z7698520203707_93deeaf60dc2146c468e1cbf4ef6d1f7.jpg",
+      "mimeType": "image/jpeg",
+      "metadata": {
+        "width": 1920,
+        "height": 2560,
+        "format": "jpeg",
+        "space": "srgb"
+      },
+      "levels": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "folder": "Test",
+      "imageName": "test",
+      "createdAt": "2026-04-16T04:45:11.953Z"
+    },
+    "adedb559-41ee-4629-ad54-80b7eb4993b0": {
+      "imageId": "adedb559-41ee-4629-ad54-80b7eb4993b0",
+      "owner": {
+        "sub": "anonymous",
+        "role": "viewer"
+      },
+      "originalFileName": "z7698520203707_93deeaf60dc2146c468e1cbf4ef6d1f7.jpg",
+      "mimeType": "image/jpeg",
+      "metadata": {
+        "width": 1920,
+        "height": 2560,
+        "format": "jpeg",
+        "space": "srgb"
+      },
+      "levels": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "folder": "Test",
+      "imageName": "quang",
+      "createdAt": "2026-04-16T04:48:15.096Z"
+    },
+    "eb66cab6-945c-493a-9b40-de7f1f42180e": {
+      "imageId": "eb66cab6-945c-493a-9b40-de7f1f42180e",
+      "owner": {
+        "sub": "anonymous",
+        "role": "viewer"
+      },
+      "originalFileName": "download.jpg",
+      "mimeType": "image/jpeg",
+      "metadata": {
+        "width": 192,
+        "height": 181,
+        "format": "jpeg",
+        "space": "srgb"
+      },
+      "levels": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "folder": "students",
+      "imageName": "sample",
+      "createdAt": "2026-04-16T04:49:41.050Z"
+    }
+  },
+  "settings": {}
+}

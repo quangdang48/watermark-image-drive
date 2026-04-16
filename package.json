@@ -1,0 +1,20 @@
+{
+  "name": "secure-photo-gallery",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.0",
+    "sharp": "^0.34.1"
+  },
+  "devDependencies": {
+    "supertest": "^7.1.1"
+  }
+}

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Photo Gallery</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="panel">
+        <div class="view-switcher">
+          <button id="teacherViewBtn" type="button" class="view-toggle-btn">Teacher</button>
+          <button id="studentViewBtn" type="button" class="view-toggle-btn">Student</button>
+        </div>
+
+        <h1 id="pageTitle">Photo Gallery</h1>
+        <p id="pageIntro" class="muted">
+          Upload an image, generate Deep Zoom tiles, and view the result
+          instantly.
+        </p>
+
+        <div class="teacher-only">
+          <div class="section-card upload-section">
+            <h3>Upload Image</h3>
+            <label for="folderInput">Folder name</label>
+            <input id="folderInput" type="text" placeholder="Example: Class A" />
+
+            <label for="imageNameInput">Image name</label>
+            <input
+              id="imageNameInput"
+              type="text"
+              placeholder="Example: Portrait 1"
+            />
+
+            <label for="imageInput">Image file</label>
+            <input
+              id="imageInput"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+            />
+
+            <button id="uploadButton" type="button" class="primary-button">
+              Upload & Process
+            </button>
+          </div>
+
+          <div class="section-card image-management-section">
+            <div class="library-header-row">
+              <h3>Image Management</h3>
+              <span id="selectedCount" class="selection-count">0 selected</span>
+            </div>
+
+            <div class="management-inputs">
+              <label for="manageFolderInput">Folder name</label>
+              <input
+                id="manageFolderInput"
+                type="text"
+                placeholder="Rename or move folder"
+              />
+
+              <label for="manageImageNameInput">Image name</label>
+              <input
+                id="manageImageNameInput"
+                type="text"
+                placeholder="Rename selected image"
+              />
+
+              <label for="imageIdInput">Image ID (optional)</label>
+              <input
+                id="imageIdInput"
+                type="text"
+                placeholder="Load by ID or click tree"
+              />
+            </div>
+
+            <div class="actions compact-actions">
+              <button id="saveImageButton" type="button">
+                Save Changes
+              </button>
+              <button id="renameFolderButton" type="button" class="secondary-button">
+                Rename Folder
+              </button>
+              <button id="loadImageButton" type="button" class="secondary-button">
+                Load Image
+              </button>
+              <button
+                id="deleteImageButton"
+                type="button"
+                class="danger-button"
+              >
+                Delete Image
+              </button>
+              <button
+                id="deleteFolderButton"
+                type="button"
+                class="danger-button"
+              >
+                Delete Folder
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="library-panel">
+          <div class="library-header-row">
+            <h3>Library</h3>
+            <button
+              id="refreshLibraryButton"
+              type="button"
+              class="secondary-button"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <p id="librarySummary" class="muted small-text">
+            No folders loaded yet.
+          </p>
+
+          <div class="tree-panel">
+            <div class="tree-header-row">
+              <p class="tree-title">Browse Images</p>
+              <div class="tree-actions teacher-only">
+                <button id="selectAllButton" type="button" class="icon-button" title="Select all">☑</button>
+                <button id="clearSelectionButton" type="button" class="icon-button" title="Clear selection">☐</button>
+              </div>
+            </div>
+            <div id="libraryTree" class="library-tree"></div>
+          </div>
+        </div>
+
+        <pre id="statusBox" class="status-box">Ready.</pre>
+      </section>
+
+      <section class="panel viewer-panel">
+        <div class="viewer-header">
+          <h2>Viewer</h2>
+          <p id="viewerMeta" class="muted">No image loaded yet.</p>
+        </div>
+        <div id="viewer" class="viewer"></div>
+      </section>
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/5.0.1/openseadragon.min.js"></script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
