@@ -3,6 +3,7 @@ import path from 'node:path';
 import { Router } from 'express';
 import { uploadSingleImage } from '../middleware/upload.js';
 import { getUploadJobStatus, runUploadViaQueue } from '../services/uploadQueue.js';
+import { recordMemorySnapshot } from '../services/runtimeMetrics.js';
 import {
   createFolderRecord,
   deleteFolderRecords,
@@ -285,6 +286,12 @@ router.post(
       if (!req.file) {
         return res.status(400).json({ error: 'An image file is required' });
       }
+
+      recordMemorySnapshot('upload:request-accepted', {
+        folder: normalizeFolderName(req.body.folder),
+        imageName: normalizeImageName(req.body.imageName, req.file.originalname),
+        fileSizeBytes: req.file.size || 0,
+      });
 
       const uploadResult = await runUploadViaQueue({
         tempFilePath: req.file.path,

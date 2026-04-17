@@ -1,7 +1,7 @@
 {
   "images": {
-    "75a3cfd6-357a-49be-86f9-fc05be52190d": {
-      "imageId": "75a3cfd6-357a-49be-86f9-fc05be52190d",
+    "4ee33a42-e439-43dc-a937-34eda1daeca1": {
+      "imageId": "4ee33a42-e439-43dc-a937-34eda1daeca1",
       "owner": {
         "sub": "anonymous",
         "role": "viewer"
@@ -31,10 +31,10 @@
       ],
       "folder": "test",
       "imageName": "pexels-kratz-1363876",
-      "createdAt": "2026-04-16T13:53:42.717Z"
+      "createdAt": "2026-04-16T15:37:51.833Z"
     },
-    "013975fb-c9d5-42a2-a436-43a264ffda25": {
-      "imageId": "013975fb-c9d5-42a2-a436-43a264ffda25",
+    "4d3c8abe-94fc-4511-b5cb-59976b26d1bb": {
+      "imageId": "4d3c8abe-94fc-4511-b5cb-59976b26d1bb",
       "owner": {
         "sub": "anonymous",
         "role": "viewer"
@@ -64,75 +64,13 @@
       ],
       "folder": "test",
       "imageName": "z7698520203707_93deeaf60dc2146c468e1cbf4ef6d1f7",
-      "createdAt": "2026-04-16T13:55:56.955Z"
-    },
-    "179e6ee2-5898-4d94-b72a-7b31de36f194": {
-      "imageId": "179e6ee2-5898-4d94-b72a-7b31de36f194",
-      "owner": {
-        "sub": "anonymous",
-        "role": "viewer"
-      },
-      "originalFileName": "download (1).jpg",
-      "mimeType": "image/jpeg",
-      "metadata": {
-        "width": 192,
-        "height": 181,
-        "format": "jpeg",
-        "space": "srgb"
-      },
-      "levels": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8
-      ],
-      "folder": "test",
-      "imageName": "download (1)",
-      "createdAt": "2026-04-16T13:58:31.691Z"
-    },
-    "380c5a72-5f61-4881-aa92-52625aad802e": {
-      "imageId": "380c5a72-5f61-4881-aa92-52625aad802e",
-      "owner": {
-        "sub": "anonymous",
-        "role": "viewer"
-      },
-      "originalFileName": "z7665162586220_7613eedc8524a0f62fda2b2959821c1d.jpg",
-      "mimeType": "image/jpeg",
-      "metadata": {
-        "width": 1792,
-        "height": 2390,
-        "format": "jpeg",
-        "space": "srgb"
-      },
-      "levels": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12
-      ],
-      "folder": "test",
-      "imageName": "z7665162586220_7613eedc8524a0f62fda2b2959821c1d",
-      "createdAt": "2026-04-16T14:04:51.082Z"
+      "createdAt": "2026-04-16T15:38:01.933Z"
     }
   },
   "folders": {
     "test": {
       "folderId": "test",
-      "createdAt": "2026-04-16T13:53:31.912Z"
+      "createdAt": "2026-04-16T15:37:45.094Z"
     }
   },
   "settings": {}

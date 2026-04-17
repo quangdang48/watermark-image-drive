@@ -1,9 +1,12 @@
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import { Queue, QueueEvents, Worker } from 'bullmq';
 import { processImageUpload } from './imagePipeline.js';
 import { saveImageRecord } from './storage.js';
+import { recordMemorySnapshot } from './runtimeMetrics.js';
 
 const UPLOAD_QUEUE_NAME = 'image-processing';
+const USE_BULLMQ = true;
 const redisHost = process.env.REDIS_HOST || '127.0.0.1';
 const redisPort = Number(process.env.REDIS_PORT || 6382);
 const workerConcurrency = Math.max(1, Number(process.env.UPLOAD_WORKER_CONCURRENCY || 1));
@@ -63,7 +66,11 @@ export function shouldUseUploadQueue() {
     return false;
   }
 
-  return String(process.env.UPLOAD_QUEUE_ENABLED || 'true') !== 'false';
+  if (process.env.UPLOAD_QUEUE_ENABLED !== undefined) {
+    return String(process.env.UPLOAD_QUEUE_ENABLED).toLowerCase() === 'true';
+  }
+
+  return USE_BULLMQ;
 }
 
 export async function processStoredUpload(uploadData) {
@@ -76,10 +83,16 @@ export async function processStoredUpload(uploadData) {
     owner = { sub: 'anonymous', role: 'viewer' },
   } = uploadData;
 
+  recordMemorySnapshot('upload:processing-start', {
+    folder,
+    imageName,
+    tempFileName: tempFilePath ? path.basename(tempFilePath) : null,
+  });
+
   try {
     const processedImage = await processImageUpload({ filePath: tempFilePath });
 
-    return await saveImageRecord({
+    const savedRecord = await saveImageRecord({
       imageId: processedImage.imageId,
       owner,
       originalFileName,
@@ -90,10 +103,23 @@ export async function processStoredUpload(uploadData) {
       imageName,
       createdAt: new Date().toISOString(),
     });
+
+    recordMemorySnapshot('upload:processing-complete', {
+      folder,
+      imageName,
+      imageId: processedImage.imageId,
+    });
+
+    return savedRecord;
   } finally {
     if (tempFilePath) {
       await fs.rm(tempFilePath, { force: true }).catch(() => undefined);
     }
+
+    recordMemorySnapshot('upload:cleanup-complete', {
+      folder,
+      imageName,
+    });
   }
 }
 
@@ -126,8 +152,12 @@ async function isQueueReady() {
 
 export async function runUploadViaQueue(uploadData) {
   const ready = await isQueueReady();
-
   if (!ready) {
+    recordMemorySnapshot('upload:inline-fallback', {
+      folder: uploadData.folder,
+      imageName: uploadData.imageName,
+    });
+
     return {
       status: 'ok',
       imageRecord: await processStoredUpload(uploadData),
@@ -136,6 +166,11 @@ export async function runUploadViaQueue(uploadData) {
   }
 
   const job = await getUploadQueue().add('process-upload', uploadData);
+  recordMemorySnapshot('upload:queued', {
+    folder: uploadData.folder,
+    imageName: uploadData.imageName,
+    jobId: String(job.id),
+  });
 
   return {
     status: 'queued',

@@ -39,6 +39,19 @@ test('serves teacher and student views from simple paths', async () => {
   assert.match(studentResponse.text, /Student/);
 });
 
+test('returns current memory metrics for upload monitoring', async () => {
+  const app = createApp();
+
+  const response = await request(app)
+    .get('/api/metrics/memory');
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.status, 'ok');
+  assert.ok(response.body.current);
+  assert.equal(typeof response.body.current.rssMB, 'number');
+  assert.ok(Array.isArray(response.body.recent));
+});
+
 test('uploads an image without JWT configuration', async () => {
   const app = createApp();
   const image = await createImageBuffer();

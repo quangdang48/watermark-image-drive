@@ -4,6 +4,7 @@ import express from 'express';
 import uploadRouter from './routes/upload.js';
 import tilesRouter from './routes/tiles.js';
 import { uploadErrorHandler } from './middleware/upload.js';
+import { getMemoryMetrics } from './services/runtimeMetrics.js';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
@@ -17,6 +18,10 @@ export function createApp() {
 
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' });
+  });
+
+  app.get('/api/metrics/memory', (_req, res) => {
+    res.json(getMemoryMetrics());
   });
 
   app.get(['/', '/teacher', '/student'], (_req, res) => {

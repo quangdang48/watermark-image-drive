@@ -8,6 +8,7 @@
     "start": "node server/index.js",
     "start:keep": "node server/index.js",
     "worker": "node server/worker.js",
+    "stress:upload": "node scripts/stressUpload.js",
     "dev": "node scripts/resetData.js && node --watch server/index.js",
     "dev:keep": "node --watch server/index.js",
     "test": "node --test && node scripts/resetData.js"
